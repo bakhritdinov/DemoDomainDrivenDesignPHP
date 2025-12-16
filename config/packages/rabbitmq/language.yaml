@@ -1,0 +1,15 @@
+old_sound_rabbit_mq:
+  producers:
+    create_language:
+      connection: default
+      exchange_options: { name: 'language', type: direct, durable: true }
+      default_content_type: 'application/json'
+      default_delivery_mode: 2 # optional. 1 means non-persistent, 2 means persistent. Defaults to "2".
+      queue_options: { name: 'create-language', routing_keys: [ 'created' ] }
+
+    update_language:
+      connection: default
+      exchange_options: { name: 'language', type: direct, durable: true }
+      default_content_type: 'application/json'
+      default_delivery_mode: 2 # optional. 1 means non-persistent, 2 means persistent. Defaults to "2".
+      queue_options: { name: 'update-language', routing_keys: [ 'updated' ] }

@@ -1,0 +1,102 @@
+framework:
+    messenger:
+        default_bus: command.bus
+        failure_transport: failed
+
+        buses:
+            command.bus: ~
+            query.bus: ~
+
+        transports:
+            failed:
+                dsn: 'doctrine://default?queue_name=failed'
+            sync: 'sync://'
+
+        routing:
+            # Country commands
+            'App\Application\Country\Command\CreateCountryCommand': sync
+            'App\Application\Country\Command\UpdateCountryCommand': sync
+
+            # Country queries
+            'App\Application\Country\Query\FindAllCountriesQuery': sync
+            'App\Application\Country\Query\FindCountriesByPaginateQuery': sync
+            'App\Application\Country\Query\FindCountryByNameQuery': sync
+            'App\Application\Country\Query\FindCountryByNumericCodeQuery': sync
+            'App\Application\Country\Query\FindCountryByAlpha2Query': sync
+            'App\Application\Country\Query\FindCountryByAlpha3Query': sync
+            'App\Application\Country\Query\FindCountryByIdQuery': sync
+            'App\Application\Country\Query\FindCountryByNameDeactivatedQuery': sync
+            'App\Application\Country\Query\FindCountryByNumericCodeDeactivatedQuery': sync
+            'App\Application\Country\Query\FindCountryByAlpha2DeactivatedQuery': sync
+            'App\Application\Country\Query\FindCountryByAlpha3DeactivatedQuery': sync
+            'App\Application\Country\Query\FindCountryByIdDeactivatedQuery': sync
+
+            # Region commands
+            'App\Application\Region\Command\CreateRegionCommand': sync
+            'App\Application\Region\Command\UpdateRegionCommand': sync
+
+            # Region queries
+            'App\Application\Region\Query\FindAllRegionsQuery': sync
+            'App\Application\Region\Query\FindRegionsByPaginateQuery': sync
+            'App\Application\Region\Query\FindRegionByNameQuery': sync
+            'App\Application\Region\Query\FindRegionByCodeQuery': sync
+            'App\Application\Region\Query\FindRegionByIdQuery': sync
+            'App\Application\Region\Query\FindRegionByNameDeactivatedQuery': sync
+            'App\Application\Region\Query\FindRegionByCodeDeactivatedQuery': sync
+            'App\Application\Region\Query\FindRegionByIdDeactivatedQuery': sync
+            'App\Application\Region\Query\FindRegionsByCountryPaginateQuery': sync
+
+            # Cities commands
+            'App\Application\City\Command\CreateCityCommand': sync
+            'App\Application\City\Command\UpdateCityCommand': sync
+
+            # Cities queries
+            'App\Application\City\Query\FindCitiesByRegionPaginateQuery': sync
+            'App\Application\City\Query\FindCityByIdQuery': sync
+            'App\Application\City\Query\FindCityByRegionAndTypeAndNameQuery': sync
+            'App\Application\City\Query\FindCityByIdDeactivatedQuery': sync
+            'App\Application\City\Query\FindCityByRegionAndTypeAndNameDeactivatedQuery': sync
+            'App\Application\City\Query\FindAllCitiesQuery': sync
+            'App\Application\City\Query\FindCitiesByPaginateQuery': sync
+
+            # Addresses commands
+            'App\Application\Address\Command\CreateAddressCommand': sync
+            'App\Application\Address\Command\UpdateAddressCommand': sync
+
+            # Addresses queries
+            'App\Application\Address\Query\FindAddressesByCityPaginateQuery': sync
+            'App\Application\Address\Query\FindAddressByIdQuery': sync
+            'App\Application\Address\Query\FindAddressByAddressQuery': sync
+            'App\Application\Address\Query\FindAddressByIdDeactivatedQuery': sync
+            'App\Application\Address\Query\FindAddressByAddressDeactivatedQuery': sync
+            'App\Application\Address\Query\FindAllAddressesQuery': sync
+            'App\Application\Address\Query\FindAddressesByPaginateQuery': sync
+            'App\Application\Address\Query\External\FindExternalAddressQuery': sync
+            'App\Application\Address\Query\FindAddressByQuery': sync
+
+            # Currency commands
+            'App\Application\Currency\Command\CreateCurrencyCommand': sync
+            'App\Application\Currency\Command\CreateCurrencyRateCommand': sync
+            'App\Application\Currency\Command\UpdateCurrencyCommand': sync
+
+            # Currency queries
+            'App\Application\Currency\Query\FindCurrencyByCodeQuery': sync
+            'App\Application\Currency\Query\FindCurrencyByCodeDeactivatedQuery': sync
+            'App\Application\Currency\Query\FindCurrencyByIdQuery': sync
+            'App\Application\Currency\Query\FindCurrencyByIdDeactivatedQuery': sync
+            'App\Application\Currency\Query\FindCurrencyByNumQuery': sync
+            'App\Application\Currency\Query\FindCurrencyByNumDeactivatedQuery': sync
+            'App\Application\Currency\Query\GetAllCurrenciesQuery': sync
+            'App\Application\Currency\Query\GetCurrenciesByPaginateQuery': sync
+
+            # Language commands
+            'App\Application\Language\Command\CreateLanguageCommand': sync
+            'App\Application\Language\Command\UpdateLanguageCommand': sync
+
+            # Language queries
+            'App\Application\Language\Query\FindLanguageByCodeQuery': sync
+            'App\Application\Language\Query\FindLanguageByCodeDeactivatedQuery': sync
+            'App\Application\Language\Query\FindLanguageByIdQuery': sync
+            'App\Application\Language\Query\FindLanguageByIdDeactivatedQuery': sync
+            'App\Application\Language\Query\FindLanguageByPaginateQuery': sync
+            'App\Application\Language\Query\FindLanguageQuery': sync

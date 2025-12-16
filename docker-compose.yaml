@@ -1,0 +1,100 @@
+services:
+
+  nginx:
+    image: jc21/nginx-proxy-manager:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "81:81"
+      - "443:443"
+    volumes:
+      - nginxdata:/data
+      - nginxletsencrypt:/etc/letsencrypt
+    networks:
+      - network
+    depends_on:
+      - app
+
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: .development/Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www
+    ports:
+      - "9501:9501"
+    networks:
+      - network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - postgresql
+
+  postgresql:
+    container_name: postgresql
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: demo
+      POSTGRES_PASSWORD: password
+    networks:
+      - network
+    volumes:
+      - .development/postgresql:/docker-entrypoint-initdb.d
+      - pgsqldata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  rabbitmq: # login guest:guest
+    container_name: rabbitmq
+    image: rabbitmq:management
+    ports:
+      - "15672:15672"
+    networks:
+      - network
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+
+  elasticsearch:
+    image: elasticsearch:8.6.2
+    container_name: elasticsearch
+    restart: unless-stopped
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - elasticsearchdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - network
+
+volumes:
+  pgsqldata:
+    driver: local
+  rabbitmqdata:
+    driver: local
+  elasticsearchdata:
+    driver: local
+  nginxdata:
+    driver: local
+  nginxletsencrypt:
+    driver: local
+
+#Docker Networks
+networks:
+  network:
+    driver: bridge

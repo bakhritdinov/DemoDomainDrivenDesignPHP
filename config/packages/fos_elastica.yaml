@@ -1,0 +1,143 @@
+# Read the documentation: https://github.com/FriendsOfSymfony/FOSElasticaBundle/blob/master/doc/setup.md
+fos_elastica:
+    clients:
+        default:
+            url: '%env(resolve:ELASTICSEARCH_URL)%'
+            compression: true
+    indexes:
+        country:
+            persistence:
+                driver: orm
+                model: App\Core\Domain\Country\Entity\Country
+                provider: ~
+                finder: ~
+                listener:
+                    enabled: false
+                    defer: true
+                    logger: true
+            properties:
+                id: ~
+                name: ~
+                numericCode: ~
+                alpha2: ~
+                alpha3: ~
+                isActive: ~
+                createdAt: ~
+                updatedAt: ~
+        region:
+            persistence:
+                driver: orm
+                model: App\Core\Domain\Region\Entity\Region
+                provider: ~
+                finder: ~
+                listener:
+                    enabled: false
+                    defer: true
+                    logger: true
+            properties:
+                id: ~
+                country:
+                    type : "nested"
+                    properties:
+                        id: ~
+                        name: ~
+                        numericCode: ~
+                        alpha2: ~
+                        alpha3: ~
+                        isActive: ~
+                        createdAt: ~
+                        updatedAt: ~
+                name: ~
+                code: ~
+                isActive: ~
+                createdAt: ~
+                updatedAt: ~
+        city:
+            persistence:
+                driver: orm
+                model: App\Core\Domain\City\Entity\City
+                provider: ~
+                finder: ~
+                listener:
+                    enabled: false
+                    defer: true
+                    logger: true
+            properties:
+                id: ~
+                region:
+                    type : "nested"
+                    properties:
+                        id: ~
+                        country:
+                            type: "nested"
+                            properties:
+                                id: ~
+                                name: ~
+                                numericCode: ~
+                                alpha2: ~
+                                alpha3: ~
+                                isActive: ~
+                                createdAt: ~
+                                updatedAt: ~
+                        name: ~
+                        code: ~
+                        isActive: ~
+                        createdAt: ~
+                        updatedAt: ~
+                name: ~
+                type: ~
+                isActive: ~
+                createdAt: ~
+                updatedAt: ~
+        address:
+            persistence:
+                driver: orm
+                model: App\Core\Domain\Address\Entity\Address
+                provider: ~
+                finder: ~
+                listener:
+                    enabled: false
+                    defer: true
+                    logger: true
+            properties:
+                id: ~
+                city:
+                    type: nested
+                    properties:
+                        id: ~
+                        region:
+                            type: nested
+                            properties:
+                                id: ~
+                                country:
+                                    type: nested
+                                    properties:
+                                        id: ~
+                                        name: ~
+                                        numericCode: ~
+                                        alpha2: ~
+                                        alpha3: ~
+                                        isActive: ~
+                                        createdAt: ~
+                                        updatedAt: ~
+                                name: ~
+                                code: ~
+                                isActive: ~
+                                createdAt: ~
+                                updatedAt: ~
+                        name: ~
+                        type: ~
+                        isActive: ~
+                        createdAt: ~
+                        updatedAt: ~
+                address: ~
+                postalCode: ~
+                street: ~
+                house: ~
+                flat: ~
+                entrance: ~
+                floor: ~
+                isActive: ~
+                createdAt: ~
+                updatedAt: ~
+

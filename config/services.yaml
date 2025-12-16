@@ -1,0 +1,97 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    dadata_token: '%env(DADATA_TOKEN)%'
+    dadata_secret: '%env(DADATA_SECRET)%'
+
+    sync.status: "%env(bool:SYNC_STATUS)%"
+    sync.entity.language: "%env(bool:SYNC_ENTITY_LANGUAGE)%"
+
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        public: false       # Allows optimizing the container by removing unused services; this also means
+                            # fetching services directly from the container via $container->get() won't work.
+                            # The best practice is to be explicit about your dependencies anyway.
+
+    _instanceof:
+        App\Application\CommandHandler:
+            tags:
+                - { name: messenger.message_handler, bus: command.bus }
+
+        App\Application\QueryHandler:
+            tags:
+                - { name: messenger.message_handler, bus: query.bus }
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Infrastructure/Kernel.php'
+
+    # DaData
+    DaData.Client:
+        class: Dadata\DadataClient
+        arguments: ["%dadata_token%", "%dadata_secret%"]
+
+    # Find address from external source
+    App\Application\Address\Query\External\FindExternalAddressInterface:
+        class: App\Infrastructure\DaData\Service\FindBySuggestAddressService
+        arguments: [ "@DaData.Client", "@serializer" ]
+
+    App\Infrastructure\ExceptionListener:
+        arguments:
+            - "@logger"
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
+
+
+    # Doctrine Listeners
+    App\Infrastructure\DBAL\Doctrine\Listener\Language\CreateLanguageEventListener:
+        arguments:
+            - "@service_container"
+            - "@logger"
+
+    App\Infrastructure\DBAL\Doctrine\Listener\Language\UpdateLanguageEventListener:
+        arguments:
+            - "@service_container"
+            - "@logger"
+
+    # Repositories
+    App\Core\Domain\Country\Repository\CountryRepositoryInterface:
+        class: App\Infrastructure\Repository\Country\CountryRepository
+        bind:
+            $finder: "@fos_elastica.finder.country"
+            $persister: "@fos_elastica.object_persister.country"
+
+    App\Core\Domain\Region\Repository\RegionRepositoryInterface:
+      class: App\Infrastructure\Repository\Region\RegionRepository
+      bind:
+        $finder: "@fos_elastica.finder.region"
+        $persister: "@fos_elastica.object_persister.region"
+
+    App\Core\Domain\City\Repository\CityRepositoryInterface:
+      class: App\Infrastructure\Repository\City\CityRepository
+      bind:
+        $finder: "@fos_elastica.finder.city"
+        $persister: "@fos_elastica.object_persister.city"
+
+    App\Core\Domain\Address\Repository\AddressRepositoryInterface:
+      class: App\Infrastructure\Repository\Address\AddressRepository
+      bind:
+        $finder: "@fos_elastica.finder.address"
+        $persister: "@fos_elastica.object_persister.address"
+
+    App\Core\Domain\Language\Repository\LanguageRepositoryInterface:
+        class: App\Infrastructure\Repository\Language\LanguageRepository
+
+    App\Core\Domain\Currency\Repository\CurrencyRepositoryInterface:
+        class: App\Infrastructure\Repository\Currency\CurrencyRepository
+
+    App\Core\Domain\Currency\Repository\CurrencyRateRepositoryInterface:
+        class: App\Infrastructure\Repository\Currency\CurrencyRateRepository

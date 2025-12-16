@@ -1,0 +1,10 @@
+imports:
+  - { resource: rabbitmq/ }
+
+old_sound_rabbit_mq:
+    connections:
+        default:
+            url: '%env(RABBITMQ_URL)%'
+            vhost: '%env(RABBITMQ_VHOST)%'
+            read_write_timeout: 4
+            heartbeat: 2

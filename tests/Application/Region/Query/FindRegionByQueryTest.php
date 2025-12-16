@@ -1,0 +1,66 @@
+<?php
+
+namespace App\Tests\Application\Region\Query;
+
+use App\Application\Query;
+use App\Application\QueryHandler;
+use App\Application\Region\Query\FindRegionByQuery;
+use App\Application\Region\Query\FindRegionByQueryHandler;
+use App\Core\Domain\Country\Entity\Country;
+use App\Core\Domain\Country\Repository\CountryRepositoryInterface;
+use App\Core\Domain\Region\Entity\Region;
+use App\Core\Domain\Region\Repository\RegionRepositoryInterface;
+use App\Infrastructure\Repository\Country\CountryRepository;
+use App\Infrastructure\Repository\Region\RegionRepository;
+use App\Tests\ElasticSearchMockTrait;
+use App\Tests\Fixture\Country\CountryFixture;
+use App\Tests\Fixture\Region\RegionFixture;
+use App\Tests\MessageBusTestCase;
+use Symfony\Component\Uid\Uuid;
+
+class FindRegionByQueryTest extends MessageBusTestCase
+{
+    use ElasticSearchMockTrait;
+
+    public function testQueryInstanceOf()
+    {
+        $this->assertInstanceOf(
+            Query::class,
+            new FindRegionByQuery(Uuid::v1())
+        );
+        $this->assertInstanceOf(
+            QueryHandler::class,
+            $this->getContainer()->get(FindRegionByQueryHandler::class)
+        );
+    }
+
+    public function testFindRegionByQueryHandler()
+    {
+        $container = $this->getContainer();
+
+        $repositoryCountry = new CountryRepository($this->entityManager, $this->getMockFinder([]), $this->getMockPersister());
+        $container->set(CountryRepositoryInterface::class, $repositoryCountry);
+        $country = CountryFixture::getOne();
+        $repositoryCountry->create($country);
+        $country = $repositoryCountry->ofId($country->getId());
+
+        $region = RegionFixture::getOne($country);
+        $repositoryRegion = new RegionRepository($this->entityManager, $this->getMockFinder([$region]), $this->getMockPersister());
+        $container->set(RegionRepositoryInterface::class, $repositoryRegion);
+        $repositoryRegion->create($region);
+
+        $regions = $container->get(FindRegionByQueryHandler::class)(
+            new FindRegionByQuery($region->getId())
+        );
+
+        $region = reset($regions);
+        $this->assertNotNull($region);
+        $this->assertInstanceOf(Region::class, $region);
+        $this->assertNotNull($region->getCountry());
+        $this->assertInstanceOf(Country::class, $region->getCountry());
+        $this->assertEquals('Moscow', $region->getName());
+        $this->assertEquals('RU-MOW', $region->getCode());
+        $this->assertNotNull($region->getCreatedAt());
+        $this->assertNotNull($region->getUpdatedAt());
+    }
+}

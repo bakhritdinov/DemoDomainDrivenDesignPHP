@@ -1,0 +1,20 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: Demo domain driven design
+            description: API documentation!
+            version: 1.0.0
+        components:
+          securitySchemes:
+            Bearer:
+              type: http
+              scheme: bearer
+              bearerFormat: JWT
+        security:
+          - Bearer: [ ]
+        servers:
+            - url: http://localhost:9501
+              description: Local server
+    areas:
+        path_patterns: # an array of regexps (document only routes under /api, except /api/doc)
+            - ^/api(?!/doc.json$)

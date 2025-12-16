@@ -1,3 +1,5 @@
+[![PHP Tests](https://github.com/bakhritdinov/DemoDomainDrivenDesignPHP/actions/workflows/php.yml/badge.svg)](https://github.com/bakhritdinov/DemoDomainDrivenDesignPHP/actions/workflows/php.yml)
+
 # Demo: Domain-Driven Design, Onion Architecture & CQRS
 
 This project is a **demonstration of a modern backend architecture** built around:

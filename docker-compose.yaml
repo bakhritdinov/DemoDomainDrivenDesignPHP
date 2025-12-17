@@ -20,9 +20,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: app
       args:
-        ENVIRONMENT: dev
-        INSTALL_XDEBUG: "true"
+        PORT: '9501'
+        ENVIRONMENT: 'dev'
+        CONTAINER_MODE: 'app'
+        INSTALL_OPCACHE: 'false'
     restart: unless-stopped
     volumes:
       - ./:/var/www
@@ -34,8 +37,6 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - postgresql
-      - rabbitmq
-      - elasticsearch
 
   postgresql:
     container_name: postgresql

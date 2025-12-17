@@ -2,50 +2,36 @@
 set -e
 
 container_mode=${CONTAINER_MODE:-app}
-env=${ENVIRONMENT:-prod}
+echo "Container mode: $container_mode"
 
-echo "Starting container in [$container_mode] mode (Env: $env)"
-
-php_run() {
+php() {
   su app -c "php $*"
 }
 
 initialStuff() {
-  echo "Running migrations..."
-  php_run /var/www/bin/console doctrine:cache:clear-metadata --env=env
-  php_run /var/www/bin/console doctrine:migrations:migrate -n --env=env
-  php_run /var/www/bin/console cache:clear --env=env
+  php /var/www/bin/console doctrine:cache:clear-metadata --env=${ENVIRONMENT:-prod}
+  php /var/www/bin/console doctrine:migrations:migrate -n --env=${ENVIRONMENT:-prod}
+  php /var/www/bin/console cache:clear --env=${ENVIRONMENT:-prod}
 }
 
 initialApplicationServer() {
-  echo "Preparing RoadRunner..."
-  mkdir -p /var/www/bin
-  vendor/bin/rr get --location /var/www/bin/
+  vendor/bin/rr get --location bin/
   chmod +x /var/www/bin/rr
 }
 
-if [ "$container_mode" = "app" ]; then
-    initialStuff
+if [ "$1" != "" ]; then
+    exec "$@"
+elif [ "$container_mode" = "app" ]; then
     initialApplicationServer
-    if [ "$1" != "" ]; then exec "$@"; fi
-    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.app.conf
-
+    initialStuff
+    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.${ENVIRONMENT:-prod}.conf
 elif [ "$container_mode" = "testing" ]; then
     initialApplicationServer
-
-    if [ "$1" != "" ]; then
-        echo -n "=> Executing test command: "
-        echo "$@"
-    fi
-
-    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.app.conf
-
+    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.${ENVIRONMENT:-prod}.conf
 elif [ "$container_mode" = "scheduler" ]; then
     initialStuff
-    if [ "$1" != "" ]; then exec "$@"; fi
-    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.scheduler.conf
+    exec supercronic /etc/supercronic/supercronic
 else
-    if [ "$1" != "" ]; then exec "$@"; fi
-    echo "Error: CONTAINER_MODE '$container_mode' is not supported."
+    echo "Container mode mismatched."
     exit 1
 fi

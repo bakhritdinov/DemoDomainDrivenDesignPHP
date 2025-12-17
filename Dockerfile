@@ -1,136 +1,334 @@
-# ------------------------------
-# ARGs
-# ------------------------------
+# Accepted values: 8.2 - 8.1 - 8.0
 ARG PHP_VERSION=8.2
 ARG COMPOSER_VERSION=latest
-ARG ENVIRONMENT=prod
-ARG INSTALL_XDEBUG=false
-ARG INSTALL_PHPREDIS=false
 
-ARG CONTAINER_MODE=app
-ARG WWWUSER=1000
-ARG WWWGROUP=1000
-ARG TIME_ZONE=Europe/Moscow
-ARG ROOT=/var/www
-ARG PORT=9501
-
-# ------------------------------
-# BASE IMAGE (PHP + extensions)
-# ------------------------------
+###########################################
+# Install PHP extenstions
+###########################################
 FROM php:${PHP_VERSION}-cli-bullseye AS base
 
-ARG ROOT
-ARG TIME_ZONE
-ARG WWWUSER
-ARG WWWGROUP
-ARG INSTALL_XDEBUG
-ARG INSTALL_PHPREDIS
+ARG TIME_ZONE=Europe/Moscow
+ARG WWWUID=1000
+ARG WWWGID=1000
+ARG WWWUSER=app
 
-ENV ROOT=${ROOT} \
-    DEBIAN_FRONTEND=noninteractive \
+ENV DEBIAN_FRONTEND=noninteractive \
     TERM=xterm-color
-
-WORKDIR ${ROOT}
 
 SHELL ["/bin/bash", "-eou", "pipefail", "-c"]
 
 RUN ln -snf /usr/share/zoneinfo/$TIME_ZONE /etc/localtime \
-    && echo $TIME_ZONE > /etc/timezone \
-    && apt-get update \
-    && apt-get upgrade -yqq \
-    && pecl -q channel-update pecl.php.net \
-    && apt-get install -yqq --no-install-recommends \
-        apt-utils gnupg gosu curl wget git supervisor \
-        libcurl4-openssl-dev ca-certificates libz-dev libbrotli-dev \
-        libpq-dev libjpeg-dev libpng-dev libfreetype6-dev libssl-dev \
-        libwebp-dev libmcrypt-dev libonig-dev libzip-dev zip unzip \
-        libargon2-1 libidn2-0 libpcre2-8-0 libpcre3 libxml2 libzstd1 \
-        postgresql procps exiftool \
-    && docker-php-ext-install sockets zip mbstring gd pcntl bcmath exif pdo_pgsql pgsql pdo_mysql \
-    && docker-php-ext-configure zip \
-    && docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype \
-    && apt-get clean \
+    && echo $TIME_ZONE > /etc/timezone
+
+RUN apt-get update; \
+    apt-get upgrade -yqq; \
+    pecl -q channel-update pecl.php.net; \
+    apt-get install -yqq --no-install-recommends --show-progress \
+          apt-utils \
+          gnupg \
+          gosu \
+          curl \
+          wget \
+          libcurl4-openssl-dev \
+          ca-certificates \
+          supervisor \
+          libz-dev \
+          libbrotli-dev \
+          libpq-dev \
+          libjpeg-dev \
+          libpng-dev \
+          libfreetype6-dev \
+          libssl-dev \
+          libwebp-dev \
+          libmcrypt-dev \
+          libonig-dev \
+          libzip-dev zip unzip \
+          libargon2-1 \
+          libidn2-0 \
+          libpcre2-8-0 \
+          libpcre3 \
+          libxml2 \
+          libzstd1 \
+          postgresql \
+          procps
+
+###########################################
+# sockets
+###########################################
+RUN docker-php-ext-install sockets;
+
+###########################################
+# zip
+###########################################
+RUN docker-php-ext-configure zip && docker-php-ext-install zip;
+
+###########################################
+# mbstring
+###########################################
+RUN docker-php-ext-install mbstring;
+
+###########################################
+# GD
+###########################################
+RUN docker-php-ext-configure gd \
+            --prefix=/usr \
+            --with-jpeg \
+            --with-webp \
+            --with-freetype \
+    && docker-php-ext-install gd;
+
+###########################################
+# OPcache
+###########################################
+ARG INSTALL_OPCACHE=true
+
+RUN if [ ${INSTALL_OPCACHE} = true ]; then \
+      docker-php-ext-install opcache; \
+  fi
+
+###########################################
+# PCNTL
+###########################################
+ARG INSTALL_PCNTL=true
+
+RUN if [ ${INSTALL_PCNTL} = true ]; then \
+      docker-php-ext-install pcntl; \
+  fi
+
+###########################################
+# BCMath
+###########################################
+ARG INSTALL_BCMATH=true
+
+RUN if [ ${INSTALL_BCMATH} = true ]; then \
+      docker-php-ext-install bcmath; \
+  fi
+
+###########################################
+# Exif
+###########################################
+ARG INSTALL_EXIF=true
+
+RUN if [ ${INSTALL_EXIF} = true ]; then \
+      docker-php-ext-configure exif \
+      && docker-php-ext-install exif \
+      && docker-php-ext-enable exif; \
+  fi
+
+###########################################
+# RabbitMQ
+###########################################
+ARG INSTALL_RABBITMQ=true
+
+RUN if [ ${INSTALL_RABBITMQ} = true ]; then \
+      apt-get install -yqq --no-install-recommends --show-progress librabbitmq-dev \
+      && pecl -q install -o -f amqp \
+      && docker-php-ext-enable amqp; \
+  fi
+
+###########################################################################
+# Human Language and Character Encoding Support
+###########################################################################
+ARG INSTALL_INTL=true
+
+RUN if [ ${INSTALL_INTL} = true ]; then \
+      apt-get install -yqq --no-install-recommends --show-progress zlib1g-dev libicu-dev g++ \
+      && docker-php-ext-configure intl \
+      && docker-php-ext-install intl; \
+  fi
+
+###########################################
+# pdo_pgsql
+###########################################
+ARG INSTALL_PDO_PGSQL=true
+
+RUN if [ ${INSTALL_PDO_PGSQL} = true ]; then \
+      docker-php-ext-install pdo_pgsql; \
+  fi
+
+###########################################
+# pgsql
+###########################################
+ARG INSTALL_PGSQL=true
+
+RUN if [ ${INSTALL_PGSQL} = true ]; then \
+      docker-php-ext-install pgsql; \
+  fi
+
+###########################################
+# pgsql client and postgis
+###########################################
+
+ARG INSTALL_PG_CLIENT=true
+ARG INSTALL_POSTGIS=true
+
+RUN if [ ${INSTALL_PG_CLIENT} = true ]; then \
+      . /etc/os-release \
+      && echo "deb http://apt.postgresql.org/pub/repos/apt $VERSION_CODENAME-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+      && curl -sL https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+      && apt-get install -yqq --no-install-recommends --show-progress postgresql-client-12 postgis \
+      && apt-get update; \
+      if [ ${INSTALL_POSTGIS} = true ]; then \
+        apt-get install -yqq --no-install-recommends --show-progress postgis; \
+      fi; \
+  fi
+
+###########################################
+# pdo_mysql
+###########################################
+
+ARG INSTALL_PDO_MYSQL=true
+
+RUN if [ ${INSTALL_PDO_MYSQL} = true ]; then \
+      docker-php-ext-install pdo_mysql; \
+  fi
+
+###########################################
+# Cleanup and setup
+###########################################
+RUN apt-get clean \
     && docker-php-source delete \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && rm /var/log/lastlog /var/log/faillog
 
-RUN if [ "$INSTALL_XDEBUG" = "true" ]; then pecl install xdebug && docker-php-ext-enable xdebug; fi
-RUN if [ "$INSTALL_PHPREDIS" = "true" ]; then pecl install redis && docker-php-ext-enable redis; fi
+RUN groupadd --force -g $WWWGID $WWWUSER \
+    && useradd -ms /bin/bash --no-log-init --no-user-group -g $WWWGID -u $WWWUID $WWWUSER
 
-RUN groupadd --force -g $WWWGROUP app \
-    && useradd -ms /bin/bash --no-log-init --no-user-group -g $WWWGROUP -u $WWWUSER app
+RUN mkdir -p \
+  var/{cache,log} \
+  && chown -R $WWWUSER:$WWWUSER \
+  var/ \
+  && chmod -R ug+rwx var/
 
-# ------------------------------
-# DEPENDENCIES STAGE (prod)
-# ------------------------------
-FROM composer:${COMPOSER_VERSION} AS deps
+###########################################
+# Install PHP dependencies for deployment
+###########################################
+FROM composer:${COMPOSER_VERSION} AS deployment_vendor
+ARG ROOT=/var/www
 
-ARG ROOT
+WORKDIR $ROOT
+COPY composer* ./
 
-WORKDIR ${ROOT}
-COPY composer.json composer.lock ./
-RUN if [ "$ENVIRONMENT" = "prod" ]; then \
-        composer install --no-dev --no-scripts --prefer-dist --optimize-autoloader --ignore-platform-reqs --no-interaction; \
-    else \
-        composer install --no-scripts --ignore-platform-reqs --no-interaction; \
-    fi
+RUN composer install \
+            --no-dev \
+            --no-interaction \
+            --prefer-dist \
+            --ignore-platform-reqs \
+            --optimize-autoloader \
+            --apcu-autoloader \
+            --ansi \
+            --no-scripts
 
-# ------------------------------
-# FINAL APP STAGE
-# ------------------------------
-FROM base AS final
+###########################################
+# Install PHP dependencies for testing
+###########################################
+FROM composer:${COMPOSER_VERSION} AS testing_vendor
+ARG ROOT=/var/www
 
-ARG ROOT
-ARG PORT
-ARG ENVIRONMENT
-ARG CONTAINER_MODE
+WORKDIR $ROOT
 
-ENV ENVIRONMENT=${ENVIRONMENT}
-ENV CONTAINER_MODE=${CONTAINER_MODE}
+COPY composer* ./
 
-WORKDIR ${ROOT}
+RUN composer install \
+             --ignore-platform-reqs \
+             --no-scripts
+
+###########################################
+# Build app container
+###########################################
+FROM base AS app
+
+ARG ROOT=/var/www
+ARG PORT=9501
+ARG RPC_PORT=6001/tcp
+ARG ENVIRONMENT=prod
+# Accepted values: app, scheduler, testing
+ARG CONTAINER_MODE=app
+
+ENV CONTAINER_MODE=${CONTAINER_MODE} \
+    ROOT=${ROOT} \
+    ENVIRONMENT=${ENVIRONMENT}
+
+WORKDIR $ROOT
 
 COPY . ${ROOT}
+COPY --from=deployment_vendor ${ROOT}/vendor vendor
 
-COPY --from=deps ${ROOT}/vendor ${ROOT}/vendor
-
-RUN mkdir -p var/cache var/log \
-    && chown -R app:app ${ROOT} \
+RUN chown -R app:app ${ROOT} \
     && chmod -R 775 var/cache var/log
 
-COPY entrypoint.sh /entrypoint.sh
-COPY utilities.sh /utilities.sh
-RUN chmod +x /entrypoint.sh \
-    && cat /utilities.sh >> ~/.bashrc
+COPY supervisord.${ENVIRONMENT}.conf /etc/supervisor/conf.d/
 
-COPY supervisord.app.conf /etc/supervisor/conf.d/supervisord.app.conf
-COPY supervisord.scheduler.conf /etc/supervisor/conf.d/supervisord.scheduler.conf
-COPY supercronic /etc/supercronic/supercronic
-
-RUN if [ "$CONTAINER_MODE" = "testing" ]; then \
-        sed -i 's/RR_CONFIG/.rr.testing.yaml/g' /etc/supervisor/conf.d/supervisord.app.conf; \
-    elif [ "$ENVIRONMENT" = "prod" ]; then \
-        sed -i 's/RR_CONFIG/.rr.yaml/g' /etc/supervisor/conf.d/supervisord.app.conf; \
-    else \
-        sed -i 's/RR_CONFIG/.rr.dev.yaml/g' /etc/supervisor/conf.d/supervisord.app.conf; \
-    fi
-
-RUN if [ "$CONTAINER_MODE" = "scheduler" ]; then \
-        wget -q "https://github.com/aptible/supercronic/releases/download/v0.1.12/supercronic-linux-amd64" \
-            -O /usr/bin/supercronic && chmod +x /usr/bin/supercronic \
-        && mkdir -p /etc/supercronic /var/log/supercronic; \
-        PORT=0; \
-    fi
-
-RUN if [ "$CONTAINER_MODE" = "testing" ]; then \
-        PORT=9502; \
-        mkdir -p config/jwt && \
-        openssl genrsa -aes256 -passout pass:test_key -out config/jwt/private-test.pem 4096 && \
-        openssl rsa -in config/jwt/private-test.pem -passin pass:test_key -pubout -out config/jwt/public-test.pem; \
-    fi
+RUN chmod +x entrypoint.sh
+RUN cat utilities.sh >> ~/.bashrc
 
 EXPOSE ${PORT}
-ENTRYPOINT ["/entrypoint.sh"]
+EXPOSE ${RPC_PORT}
 
-# HEALTHCHECK
-HEALTHCHECK --start-period=5s --interval=10s --timeout=5s --retries=8 \
-  CMD curl --fail http://localhost:2114/health?plugin=http || exit 1
+ENTRYPOINT ["./entrypoint.sh"]
+
+HEALTHCHECK --start-period=5s --interval=10s --timeout=5s --retries=8 CMD curl --fail http://localhost:2114/health?plugin=http || exit 1
+
+###########################################
+# Build testing container
+###########################################
+FROM base AS testing
+
+ARG ROOT=/var/www
+ARG PORT=9502
+ARG ENVIRONMENT=prod
+# Accepted values: app, scheduler, testing
+ARG CONTAINER_MODE=testing
+
+ENV CONTAINER_MODE=${CONTAINER_MODE} \
+    ROOT=${ROOT} \
+    ENVIRONMENT=${ENVIRONMENT}
+
+WORKDIR $ROOT
+
+COPY . ${ROOT}
+COPY --from=testing_vendor ${ROOT}/vendor vendor
+
+RUN chown -R app:app ${ROOT} \
+    && chmod -R 775 var/cache var/log
+
+COPY supervisord.prod.conf /etc/supervisor/conf.d/
+
+RUN chmod +x entrypoint.sh
+RUN cat utilities.sh >> ~/.bashrc
+
+EXPOSE ${PORT}
+
+ENTRYPOINT ["./entrypoint.sh"]
+
+HEALTHCHECK --start-period=5s --interval=10s --timeout=5s --retries=8 CMD curl --fail http://localhost:2114/health?plugin=http || exit 1
+
+###########################################
+# Build scheduler container
+###########################################
+FROM base AS scheduler
+
+ARG ROOT=/var/www
+ARG ENVIRONMENT=prod
+# Accepted values: app, scheduler, testing
+ARG CONTAINER_MODE=scheduler
+
+ENV CONTAINER_MODE=${CONTAINER_MODE} \
+    ROOT=${ROOT} \
+    ENVIRONMENT=${ENVIRONMENT}
+
+WORKDIR $ROOT
+
+RUN wget -q "https://github.com/aptible/supercronic/releases/download/v0.1.12/supercronic-linux-amd64" \
+               -O /usr/bin/supercronic \
+          && chmod +x /usr/bin/supercronic \
+          && mkdir -p /etc/supercronic \
+          && mkdir -p /var/log/supercronic;
+
+COPY . ${ROOT}
+COPY --from=deployment_vendor ${ROOT}/vendor vendor
+
+RUN chmod +x entrypoint.sh
+RUN cat utilities.sh >> ~/.bashrc
+
+ENTRYPOINT ["./entrypoint.sh"]

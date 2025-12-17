@@ -1,0 +1,15 @@
+services:
+  testing:
+    container_name: testing
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: testing
+      args:
+        PORT: '9502'
+        ENVIRONMENT: 'prod'
+        CONTAINER_MODE: 'testing'
+        INSTALL_OPCACHE: 'false'
+    restart: unless-stopped
+    env_file:
+      - .env.test

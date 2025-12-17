@@ -6,6 +6,10 @@ on:
         description: "The tag of the built image"
         value: ${{ jobs.build.outputs.image_tag }}
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest

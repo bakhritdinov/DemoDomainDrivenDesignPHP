@@ -1,4 +1,4 @@
-[![PHP Tests](https://github.com/bakhritdinov/DemoDomainDrivenDesignPHP/actions/workflows/php.yml/badge.svg)](https://github.com/bakhritdinov/DemoDomainDrivenDesignPHP/actions/workflows/php.yml)
+[![Testing](https://github.com/bakhritdinov/DemoDomainDrivenDesignPHP/actions/workflows/testing.yml/badge.svg)](https://github.com/bakhritdinov/DemoDomainDrivenDesignPHP/actions/workflows/testing.yml)
 
 # Demo: Domain-Driven Design, Onion Architecture & CQRS
 

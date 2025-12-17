@@ -1741,6 +1741,20 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         cocur_slugify?: CocurSlugifyConfig,
  *         old_sound_rabbit_mq?: OldSoundRabbitMqConfig,
  *     },
+ *     "when@env"?: array{
+ *         imports?: ImportsConfig,
+ *         parameters?: ParametersConfig,
+ *         services?: ServicesConfig,
+ *         framework?: FrameworkConfig,
+ *         doctrine?: DoctrineConfig,
+ *         doctrine_migrations?: DoctrineMigrationsConfig,
+ *         baldinof_road_runner?: BaldinofRoadRunnerConfig,
+ *         nelmio_api_doc?: NelmioApiDocConfig,
+ *         monolog?: MonologConfig,
+ *         fos_elastica?: FosElasticaConfig,
+ *         cocur_slugify?: CocurSlugifyConfig,
+ *         old_sound_rabbit_mq?: OldSoundRabbitMqConfig,
+ *     },
  *     "when@prod"?: array{
  *         imports?: ImportsConfig,
  *         parameters?: ParametersConfig,
@@ -1850,6 +1864,7 @@ namespace Symfony\Component\Routing\Loader\Configurator;
  * }
  * @psalm-type RoutesConfig = array{
  *     "when@dev"?: array<string, RouteConfig|ImportConfig|AliasConfig>,
+ *     "when@env"?: array<string, RouteConfig|ImportConfig|AliasConfig>,
  *     "when@prod"?: array<string, RouteConfig|ImportConfig|AliasConfig>,
  *     "when@test"?: array<string, RouteConfig|ImportConfig|AliasConfig>,
  *     ...<string, RouteConfig|ImportConfig|AliasConfig>

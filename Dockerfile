@@ -254,8 +254,11 @@ WORKDIR $ROOT
 COPY . ${ROOT}
 COPY --from=deployment_vendor ${ROOT}/vendor vendor
 
-RUN chown -R app:app ${ROOT} \
-    && chmod -R 775 var/cache var/log
+RUN mkdir -p \
+  var/{cache,log} \
+  && chown -R $WWWUSER:$WWWUSER \
+  var/ \
+  && chmod -R ug+rwx var/
 
 COPY supervisord.${ENVIRONMENT}.conf /etc/supervisor/conf.d/
 
@@ -289,8 +292,11 @@ WORKDIR $ROOT
 COPY . ${ROOT}
 COPY --from=testing_vendor ${ROOT}/vendor vendor
 
-RUN chown -R app:app ${ROOT} \
-    && chmod -R 775 var/cache var/log
+RUN mkdir -p \
+  var/{cache,log} \
+  && chown -R $WWWUSER:$WWWUSER \
+  var/ \
+  && chmod -R ug+rwx var/
 
 COPY supervisord.prod.conf /etc/supervisor/conf.d/
 

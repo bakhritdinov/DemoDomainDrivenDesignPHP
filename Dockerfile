@@ -80,6 +80,12 @@ RUN if [ "$ENVIRONMENT" = "prod" ]; then \
 FROM base AS final
 
 ARG ROOT
+ARG PORT
+ARG ENVIRONMENT
+ARG CONTAINER_MODE
+
+ENV ENVIRONMENT=${ENVIRONMENT}
+ENV CONTAINER_MODE=${CONTAINER_MODE}
 
 WORKDIR ${ROOT}
 
@@ -95,12 +101,6 @@ RUN chmod +x /entrypoint.sh \
 COPY supervisord.app.conf /etc/supervisor/conf.d/supervisord.app.conf
 COPY supervisord.scheduler.conf /etc/supervisor/conf.d/supervisord.scheduler.conf
 COPY supercronic /etc/supercronic/supercronic
-
-ARG PORT
-ARG ENVIRONMENT
-ARG CONTAINER_MODE
-
-ENV ENVIRONMENT=${ENVIRONMENT}
 
 RUN if [ "$CONTAINER_MODE" = "testing" ]; then \
         sed -i 's/RR_CONFIG/.rr.testing.yaml/g' /etc/supervisor/conf.d/supervisord.app.conf; \

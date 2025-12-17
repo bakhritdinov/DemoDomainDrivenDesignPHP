@@ -10,6 +10,8 @@ on:
 jobs:
   phpunit:
     runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ${{ inputs.image_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

@@ -1,4 +1,4 @@
-name: Build Image
+name: Build docker Image
 on:
   workflow_call:
     outputs:
@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 jobs:
-  build:
+  docker:
     runs-on: ubuntu-latest
     permissions:
       contents: read

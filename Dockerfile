@@ -93,6 +93,10 @@ COPY . ${ROOT}
 
 COPY --from=deps ${ROOT}/vendor ${ROOT}/vendor
 
+RUN mkdir -p var/cache var/log \
+    && chown -R app:app ${ROOT} \
+    && chmod -R 775 var/cache var/log
+
 COPY entrypoint.sh /entrypoint.sh
 COPY utilities.sh /utilities.sh
 RUN chmod +x /entrypoint.sh \

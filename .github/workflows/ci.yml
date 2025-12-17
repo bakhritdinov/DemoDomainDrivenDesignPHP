@@ -10,11 +10,13 @@ permissions:
 
 jobs:
   build:
+    name: Build and Push
     uses: ./.github/workflows/_build.yml
     secrets: inherit
 
   test:
     needs: build
+    name: Run PhpUnit Tests
     uses: ./.github/workflows/_test.yml
     with:
       image_name: ghcr.io/${{ github.repository_owner }}/app:${{ needs.build.outputs.image_tag }}

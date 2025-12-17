@@ -19,7 +19,10 @@ services:
     container_name: app
     build:
       context: .
-      dockerfile: .development/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: testing
+        INSTALL_XDEBUG: "true"
     restart: unless-stopped
     volumes:
       - ./:/var/www
@@ -31,6 +34,8 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - postgresql
+      - rabbitmq
+      - elasticsearch
 
   postgresql:
     container_name: postgresql
@@ -43,12 +48,12 @@ services:
     networks:
       - network
     volumes:
-      - .development/postgresql:/docker-entrypoint-initdb.d
+      - ./postgresql-init.sh:/docker-entrypoint-initdb.d/postgresql-init.sh
       - pgsqldata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
-  rabbitmq: # login guest:guest
+  rabbitmq:
     container_name: rabbitmq
     image: rabbitmq:management
     ports:
@@ -59,8 +64,8 @@ services:
       - rabbitmqdata:/var/lib/rabbitmq
 
   elasticsearch:
-    image: elasticsearch:8.6.2
     container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.2
     restart: unless-stopped
     environment:
       - xpack.security.enabled=false
@@ -94,7 +99,6 @@ volumes:
   nginxletsencrypt:
     driver: local
 
-#Docker Networks
 networks:
   network:
     driver: bridge

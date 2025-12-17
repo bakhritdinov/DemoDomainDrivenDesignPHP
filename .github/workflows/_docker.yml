@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   build:
+    name: Docker image
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ steps.meta.outputs.version }}

@@ -9,6 +9,7 @@ on:
 
 jobs:
   phpunit:
+    name: PHPUnit
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: ${{ inputs.image_name }}

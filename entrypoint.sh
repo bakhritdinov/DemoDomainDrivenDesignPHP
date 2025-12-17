@@ -24,20 +24,23 @@ initialApplicationServer() {
   chmod +x /var/www/bin/rr
 }
 
-if [ "$1" != "" ]; then
-    exec "$@"
-
-elif [ "$container_mode" = "app" ] || [ "$container_mode" = "testing" ]; then
+if [ "$container_mode" = "app" ]; then
+    initialStuff
     initialApplicationServer
-    if [ "$container_mode" = "app" ]; then
-        initialStuff
-    fi
+    if [ "$1" != "" ]; then exec "$@"; fi
+    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.app.conf
+
+elif [ "$container_mode" = "testing" ]; then
+    initialApplicationServer
+    if [ "$1" != "" ]; then exec "$@"; fi
     exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.app.conf
 
 elif [ "$container_mode" = "scheduler" ]; then
     initialStuff
+    if [ "$1" != "" ]; then exec "$@"; fi
     exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.scheduler.conf
 else
+    if [ "$1" != "" ]; then exec "$@"; fi
     echo "Error: CONTAINER_MODE '$container_mode' is not supported."
     exit 1
 fi

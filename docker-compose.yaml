@@ -21,7 +21,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        ENVIRONMENT: testing
+        ENVIRONMENT: dev
         INSTALL_XDEBUG: "true"
     restart: unless-stopped
     volumes:

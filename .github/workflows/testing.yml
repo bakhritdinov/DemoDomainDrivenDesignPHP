@@ -44,4 +44,4 @@ jobs:
 
       - name: Run tests
         run: |
-          docker run --rm ${{ github.workspace }}:/var/www ghcr.io/${{ github.repository_owner }}/app:latest php vendor/bin/phpunit
+          docker run --rm ghcr.io/${{ github.repository_owner }}/app:latest php vendor/bin/phpunit

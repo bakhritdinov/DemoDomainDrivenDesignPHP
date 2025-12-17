@@ -32,7 +32,12 @@ if [ "$container_mode" = "app" ]; then
 
 elif [ "$container_mode" = "testing" ]; then
     initialApplicationServer
-    if [ "$1" != "" ]; then exec "$@"; fi
+
+    if [ "$1" != "" ]; then
+        echo -n "=> Executing test command: "
+        echo "$@"
+    fi
+
     exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.app.conf
 
 elif [ "$container_mode" = "scheduler" ]; then
